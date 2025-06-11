@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deriv Trading Bot - Admin</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- HTMX CDN -->
+    <script src="https://unpkg.com/htmx.org@1.8.0"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 1rem; /* Rounded corners */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+            padding: 2.5rem;
+            max-width: 28rem;
+            width: 90%;
+            text-align: center;
+        }
+        .btn-primary {
+            background-color: #6366f1; /* Indigo */
+            color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .btn-primary:hover {
+            background-color: #4f46e5; /* Darker indigo on hover */
+            transform: translateY(-1px);
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        .btn-link {
+            color: #6366f1; /* Indigo link color */
+            font-weight: 500;
+            transition: color 0.2s ease-in-out;
+        }
+        .btn-link:hover {
+            text-decoration: underline;
+            color: #4f46e5;
+        }
+        /* Custom spinner for loading state */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #6366f1;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1 class="text-3xl font-extrabold text-gray-900 mb-4">Admin Area - Model Training</h1>
+        <p class="text-gray-600 mb-8">Trigger the machine learning model training process.</p>
+
+        <form hx-post="/admin/train_model" hx-target="#training-status" hx-swap="innerHTML">
+            <button
+                type="submit"
+                class="btn-primary w-full"
+                hx-indicator="#loading-spinner"
+            >
+                <span id="loading-spinner" class="spinner htmx-indicator"></span>
+                Train Trading Model
+            </button>
+        </form>
+
+        <div id="training-status" class="mt-6">
+            <!-- HTMX will load messages about training status here -->
+            <p class="text-gray-500">Click the button above to start model training.</p>
+        </div>
+
+        <div class="mt-8 text-sm text-gray-500 flex justify-between">
+            <a href="/" class="btn-link mr-4">Back to Home</a>
+            <a href="/dashboard" class="btn-link mr-4">Go to Dashboard</a>
+            <a href="/models/download" class="btn-link">Download Models</a>
+        </div>
+    </div>
+</body>
+</html>
