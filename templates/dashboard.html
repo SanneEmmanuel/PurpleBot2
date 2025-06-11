@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purmple Platfor- Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            min-height: 100vh;
+            margin: 0;
+            padding: 1.5rem;
+            color: #333;
+        }
+        .container {
+            max-width: 96rem; /* Wider container */
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+        }
+        h1 {
+            color: #1a202c; /* Darker heading text */
+        }
+        th {
+            background-color: #edf2f7; /* Light gray for table header */
+            color: #2d3748; /* Darker text for header */
+            padding: 0.75rem 1.5rem;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.875rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            padding: 0.75rem 1.5rem;
+            border-bottom: 1px solid #ebf4f8; /* Very light border */
+            font-size: 0.95rem;
+            color: #4a5568;
+        }
+        tr:nth-child(even) {
+            background-color: #f7fafc; /* Slightly darker row for zebra striping */
+        }
+        .status-open {
+            color: #38a169; /* Green for open */
+            font-weight: 500;
+        }
+        .status-closed {
+            color: #e53e3e; /* Red for closed */
+            font-weight: 500;
+        }
+        .pnl-positive {
+            color: #2f855a; /* Darker green */
+            font-weight: 600;
+        }
+        .pnl-negative {
+            color: #c53030; /* Darker red */
+            font-weight: 600;
+        }
+        .btn-link {
+            color: #6366f1; /* Indigo link color */
+            font-weight: 500;
+            transition: color 0.2s ease-in-out;
+        }
+        .btn-link:hover {
+            text-decoration: underline;
+            color: #4f46e5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-extrabold text-gray-900 mb-6">Live Trading Dashboard</h1>
+        <p class="text-gray-600 mb-8">Monitoring real-time trade activity.</p>
+
+        <div class="overflow-x-auto rounded-lg shadow-md mb-8">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">Trade ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Direction</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-lg">P&L</th>
+                    </tr>
+                </thead>
+                <tbody id="trade-table-body" class="bg-white divide-y divide-gray-200">
+                    <!-- Live trade data will be inserted here by JavaScript -->
+                    <tr>
+                        <td colspan="6" class="text-center py-8 text-gray-500">Awaiting live trade data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-8 text-center">
+            <a href="/" class="btn-link mr-4">Back to Home</a>
+            <a href="/admin/train" class="btn-link mr-4">Admin Area</a>
+            <a href="/models/download" class="btn-link">Download Models</a>
+        </div>
+    </div>
+
+    <script>
+        const tradeTableBody = document.getElementById('trade-table-body');
+        const eventSource = new EventSource('/events'); // Connect to the SSE endpoint
+
+        eventSource.onmessage = function(event) {
+            const newTrade = JSON.parse(event.data);
+            console.log('Received trade:', newTrade);
+
+            // Remove "Awaiting data" row if present
+            if (tradeTableBody.children.length === 1 && tradeTableBody.children[0].colSpan === 6) {
+                tradeTableBody.innerHTML = '';
+            }
+
+            // Create a new table row
+            const row = document.createElement('tr');
+
+            // Apply specific classes for P&L
+            const pnlClass = newTrade.pnl > 0 ? 'pnl-positive' : (newTrade.pnl < 0 ? 'pnl-negative' : '');
+            const statusClass = newTrade.status === 'open' ? 'status-open' : 'status-closed';
+
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">${newTrade.id}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${newTrade.asset}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${newTrade.direction}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${newTrade.amount.toFixed(2)}</td>
+                <td class="px-6 py-4 whitespace-nowrap"><span class="${statusClass}">${newTrade.status.toUpperCase()}</span></td>
+                <td class="px-6 py-4 whitespace-nowrap"><span class="${pnlClass}">${newTrade.pnl !== null ? newTrade.pnl.toFixed(2) : 'N/A'}</span></td>
+            `;
+
+            // Prepend new trades to the top of the table for real-time feel
+            tradeTableBody.prepend(row);
+
+            // Keep only a reasonable number of trades (e.g., last 20)
+            if (tradeTableBody.children.length > 20) {
+                tradeTableBody.removeChild(tradeTableBody.lastChild);
+            }
+        };
+
+        eventSource.onerror = function(err) {
+            console.error('EventSource failed:', err);
+            eventSource.close();
+            tradeTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-red-500">Error connecting to live trade feed. Please refresh.</td></tr>`;
+        };
+    </script>
+</body>
+</html>
