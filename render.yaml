@@ -1,0 +1,49 @@
+services:
+  # Web Service for FastAPI application
+  # This is the only service type available for free that can serve web requests.
+  - type: web
+    name: purple-platform-web
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    # Ensure your main.py binds to 0.0.0.0 and uses the $PORT environment variable
+    startCommand: "uvicorn main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /
+    autoDeploy: true # Set to true to automatically deploy on new commits
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1" # Ensures Python output is unbuffered
+      # The following environment variables are kept for code compatibility,
+      # but understand that the services they point to (Redis, persistent DB)
+      # are NOT available or NOT persistent on the free tier.
+      # You MUST adjust your `engine.py` to handle the lack of persistent DB/Redis,
+      # e.g., by using in-memory data structures for non-critical temporary data.
+      - key: REDIS_URL
+        value: "redis://localhost:6379/0" # Fallback/dummy URL, Celery won't run as worker
+      - key: DATABASE_URL
+        value: "sqlite:///:memory:" # Changes to in-memory SQLite for non-persistence
+      - key: FERNET_KEY # IMPORTANT: REPLACE WITH YOUR SECURE FERNET KEY
+        value: "YOUR_SECURE_FERNET_KEY_HERE"
+      - key: DERIV_APP_ID # IMPORTANT: REPLACE WITH YOUR DERIV APP ID
+        value: "YOUR_DERIV_APP_ID_HERE"
+      - key: DERIV_DATA_API_TOKEN # IMPORTANT: REPLACE WITH A READ-ONLY TOKEN FOR HISTORICAL DATA IF NEEDED
+        value: "YOUR_DERIV_READONLY_TOKEN_HERE"
+
+# IMPORTANT CONSIDERATIONS FOR RENDER FREE PLAN:
+# 1. NO PERSISTENT DISKS: The `disk` section is REMOVED.
+#    This means your SQLite database (deriv_bot.db) and any saved models
+#    (`static/models/`) WILL BE LOST on every deploy or service restart.
+#    For persistent data, you MUST upgrade to a paid Render plan that supports Persistent Disks.
+# 2. NO FREE WORKER SERVICES: The `worker` service type is REMOVED.
+#    Celery tasks (like continuous trading and background model training) CANNOT run
+#    as dedicated worker services on the free tier.
+#    For background tasks, you MUST upgrade to a paid Render plan.
+# 3. EPHEMERAL REDIS: While Render offers a free "Key Value" store, it is not persistent.
+#    The `databases` section is REMOVED as it implies a persistent setup.
+#    Celery cannot use this ephemeral store for reliable task queuing/results.
+# 4. IDLE SPIN-DOWN: Your web service will spin down after 15 minutes of inactivity.
+#    This means any trading logic running directly within the web service would stop
+#    until a new request comes in.
+#
+# To achieve the full functionality described in your project plan (continuous trading,
+# persistent data, background tasks), a paid Render plan is required.
+# This `render.yaml` only allows the web interface to be accessible for demonstration.
